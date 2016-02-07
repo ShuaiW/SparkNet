@@ -32,7 +32,7 @@ object CifarApp {
       .setAppName("Cifar")
       .set("spark.driver.maxResultSize", "5G")
       .set("spark.task.maxFailures", "1")
-      .setExecutorEnv("LD_LIBRARY_PATH", "/usr/local/cuda-7.5/lib64")
+      .setExecutorEnv("LD_LIBRARY_PATH", "/usr/local/cuda-7.5/lib64:/root/javacpp-presets/caffe/cppbuild/linux-x86_64/caffe-master/build/lib")
 
     val sc = new SparkContext(conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
@@ -86,28 +86,36 @@ object CifarApp {
     workers.foreach(_ => {
       val netParam = new NetParameter()
       ReadProtoFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick.prototxt", netParam)
-      val net = new JavaCPPCaffeNet(netParam, schema, new DefaultPreprocessor(schema))
-      workerStore.put("net", net)
+
+      val solverParam = new SolverParameter()
+      ReadSolverParamsFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_solver.prototxt", solverParam)
+      solverParam.clear_net()
+      solverParam.set_allocated_net_param(netParam)
+
+      val solver = new CaffeSolver(solverParam, schema, new DefaultPreprocessor(schema))
+      workerStore.put("netParam", netParam) // prevent netParam from being garbage collected
+      workerStore.put("solverParam", solverParam) // prevent solverParam from being garbage collected
+      workerStore.put("solver", solver)
     })
 
     // initialize weights on master
-    var netWeights = workers.map(_ => workerStore.get[JavaCPPCaffeNet]("net").getWeights()).collect()(0)
+    var netWeights = workers.map(_ => workerStore.get[CaffeSolver]("solver").trainNet.getWeights()).collect()(0)
 
     var i = 0
     while (true) {
       log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
       log("setting weights on workers", i)
-      workers.foreach(_ => workerStore.get[JavaCPPCaffeNet]("net").setWeights(broadcastWeights.value))
+      workers.foreach(_ => workerStore.get[CaffeSolver]("solver").trainNet.setWeights(broadcastWeights.value))
 
       if (i % 5 == 0) {
-        log("testing, i")
+        log("testing", i)
         val testAccuracies = testDF.mapPartitions(
           testIt => {
             val numTestBatches = workerStore.get[Int]("testPartitionSize") / testBatchSize
             var accuracy = 0F
             for (j <- 0 to numTestBatches - 1) {
-              val out = workerStore.get[JavaCPPCaffeNet]("net").forward(testIt)
+              val out = workerStore.get[CaffeSolver]("solver").trainNet.forward(testIt)
               accuracy += out("accuracy").get(Array())
             }
             Array[Float](accuracy / numTestBatches).iterator
@@ -129,7 +137,7 @@ object CifarApp {
           val t2 = System.currentTimeMillis()
           print("stuff took " + ((t2 - t1) * 1F / 1000F).toString + " s\n")
           for (j <- 0 to syncInterval - 1) {
-            workerStore.get[JavaCPPCaffeNet]("net").forwardBackward(it)
+            workerStore.get[CaffeSolver]("solver").step(it)
             val t3 = System.currentTimeMillis()
             print("iter took " + ((t3 - t2) * 1F / 1000F).toString + " s\n")
           }
@@ -137,7 +145,7 @@ object CifarApp {
       )
 
       log("collecting weights", i)
-      netWeights = workers.map(_ => { workerStore.get[JavaCPPCaffeNet]("net").getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = workers.map(_ => { workerStore.get[CaffeSolver]("solver").trainNet.getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
       log("weight = " + netWeights.allWeights("conv1")(0).toFlat()(0).toString, i)
       i += 1

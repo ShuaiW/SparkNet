@@ -7,18 +7,32 @@ assemblySettings
 
 classpathTypes += "maven-plugin"
 
-libraryDependencies += "org.bytedeco" % "javacpp" % "1.1"
+resolvers += "javacpp" at "http://www.eecs.berkeley.edu/~rkn/temp/"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1"
+// resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
+libraryDependencies += "org.bytedeco" % "javacpp" % "1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.2-SNAPSHOT" classifier "linux-x86_64"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT"
+
+libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.1.0-1.2-SNAPSHOT" classifier "linux-x86_64"
+
+// libraryDependencies += "org.bytedeco" % "javacpp" % "1.1"
+
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "linux-x86"
-libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "linux-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "linux-x86_64"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "macosx-x86_64"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "windows-x86"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "caffe" % "master-1.1" classifier "windows-x86_64"
 
-libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "linux-x86"
-libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "linux-x86_64"
+// libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "linux-x86_64"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "macosx-x86_64"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "windows-x86"
 // libraryDependencies += "org.bytedeco.javacpp-presets" % "opencv" % "3.0.0-1.1" classifier "windows-x86_64"
