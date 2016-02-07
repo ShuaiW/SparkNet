@@ -138,9 +138,9 @@ object CifarApp {
           print("stuff took " + ((t2 - t1) * 1F / 1000F).toString + " s\n")
           for (j <- 0 to syncInterval - 1) {
             workerStore.get[CaffeSolver]("solver").step(it)
-            val t3 = System.currentTimeMillis()
-            print("iter took " + ((t3 - t2) * 1F / 1000F).toString + " s\n")
           }
+          val t3 = System.currentTimeMillis()
+          print("iters took " + ((t3 - t2) * 1F / 1000F).toString + " s\n")
         }
       )
 
