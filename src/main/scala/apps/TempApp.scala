@@ -23,17 +23,11 @@ object TempApp {
 
     val netParam = new NetParameter()
     ReadProtoFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick.prototxt", netParam)
-
-    val solverParam = new SolverParameter()
-    ReadSolverParamsFromTextFileOrDie(sparkNetHome + "/models/cifar10/cifar10_quick_solver.prototxt", solverParam)
-    solverParam.clear_net()
-    solverParam.set_allocated_net_param(netParam)
-
-    val solver = new CaffeSolver(solverParam, schema, new DefaultPreprocessor(schema))
+    val net = JavaCPPCaffeNet(netParam, schema, new DefaultPreprocessor(schema))
 
     val t1 = System.currentTimeMillis()
     for (i <- 0 to 10 - 1) {
-      solver.step(batch.iterator)
+      net.forwardBackward(batch.iterator)
     }
     val t2 = System.currentTimeMillis()
     print("iters took " + ((t2 - t1) * 1F / 1000F).toString + " s\n")
