@@ -19,6 +19,7 @@ object TempApp {
       batch(i) = Row(im, label)
     }
 
+    Caffe.set_mode(Caffe.GPU)
     val schema = StructType(StructField("data", ArrayType(FloatType), false) :: StructField("label", IntegerType, false) :: Nil)
 
     val netParam = new NetParameter()
@@ -27,6 +28,7 @@ object TempApp {
 
     val t1 = System.currentTimeMillis()
     for (i <- 0 to 10 - 1) {
+      Caffe.set_mode(Caffe.GPU)
       net.forwardBackward(batch.iterator)
     }
     val t2 = System.currentTimeMillis()
